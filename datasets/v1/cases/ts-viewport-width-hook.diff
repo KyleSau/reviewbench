@@ -1,0 +1,18 @@
+diff --git a/src/hooks/useViewportWidth.ts b/src/hooks/useViewportWidth.ts
+new file mode 100644
+--- /dev/null
++++ b/src/hooks/useViewportWidth.ts
+@@ -0,0 +1,13 @@
++import { useEffect, useState } from "react";
++
++/** Current window width in CSS pixels, updated on resize. */
++export function useViewportWidth(): number {
++  const [width, setWidth] = useState(() => window.innerWidth);
++
++  useEffect(() => {
++    const onResize = () => setWidth(window.innerWidth);
++    window.addEventListener("resize", onResize);
++  }, []);
++
++  return width;
++}

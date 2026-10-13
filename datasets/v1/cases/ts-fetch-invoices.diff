@@ -1,0 +1,24 @@
+diff --git a/src/api/billing.ts b/src/api/billing.ts
+--- a/src/api/billing.ts
++++ b/src/api/billing.ts
+@@ -1,6 +1,7 @@
+ import { API_BASE, getToken } from "./client";
+ import { ApiError } from "./errors";
+-import type { Customer } from "./types";
++import { toInvoice } from "./mappers";
++import type { Customer, Invoice, InvoiceDto } from "./types";
+ 
+ export async function fetchCustomer(customerId: string): Promise<Customer> {
+   const res = await fetch(`${API_BASE}/customers/${customerId}`, {
+@@ -11,3 +12,11 @@
+   }
+   return (await res.json()) as Customer;
+ }
++
++export async function fetchInvoices(customerId: string): Promise<Invoice[]> {
++  const res = await fetch(`${API_BASE}/customers/${customerId}/invoices`, {
++    headers: { Authorization: `Bearer ${getToken()}` },
++  });
++  const body = (await res.json()) as { invoices: InvoiceDto[] };
++  return body.invoices.map(toInvoice);
++}

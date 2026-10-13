@@ -1,0 +1,7 @@
+{
+  "id": "cs-clean-checksum-service",
+  "language": "csharp",
+  "title": "Verify uploaded artifacts against a checksum manifest",
+  "description": "Streams SHA-256 over large files and parses the `sha256  path` manifest format.",
+  "expected_issues": []
+}

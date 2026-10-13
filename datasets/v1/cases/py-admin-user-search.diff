@@ -1,0 +1,21 @@
+diff --git a/app/repositories/users.py b/app/repositories/users.py
+--- a/app/repositories/users.py
++++ b/app/repositories/users.py
+@@ -9,3 +9,17 @@
+         )
+         row = cur.fetchone()
+     return dict(zip(USER_COLUMNS, row)) if row else None
++
++
++def search_users(conn, term: str, limit: int = 25) -> list[dict]:
++    """Case-insensitive search on username or email, used by the admin console."""
++    sql = f"""
++        SELECT id, username, email, created_at
++        FROM users
++        WHERE username ILIKE '%{term}%' OR email ILIKE '%{term}%'
++        ORDER BY username
++        LIMIT {int(limit)}
++    """
++    with conn.cursor() as cur:
++        cur.execute(sql)
++        return [dict(zip(USER_COLUMNS, row)) for row in cur.fetchall()]

@@ -1,0 +1,2 @@
+# Keep LF everywhere so dataset diffs (and their fingerprint) are identical on Windows and Linux.
+* text=auto eol=lf

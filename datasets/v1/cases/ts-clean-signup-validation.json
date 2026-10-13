@@ -1,0 +1,7 @@
+{
+  "id": "ts-clean-signup-validation",
+  "language": "typescript",
+  "title": "Add POST /signup with request validation",
+  "description": "Self-serve signup. Validates the body with zod and reuses the login rate limiter.",
+  "expected_issues": []
+}

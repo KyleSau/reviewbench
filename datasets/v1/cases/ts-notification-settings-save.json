@@ -1,0 +1,16 @@
+{
+  "id": "ts-notification-settings-save",
+  "language": "typescript",
+  "title": "Fix stuck spinner on notification settings",
+  "description": "If saving failed, `setSaving(false)` never ran and the Save button spun forever. Wraps the request so the spinner always resets.",
+  "expected_issues": [
+    {
+      "file": "src/settings/NotificationSettingsForm.tsx",
+      "line_start": 19,
+      "line_end": 23,
+      "category": "swallowed_exception",
+      "severity": "high",
+      "description": "The empty catch swallows the failure and execution falls through to `toast.success(\"Settings saved\")`, so users are told their settings were saved when they were not. Reset the spinner in `finally` and show an error toast in `catch`."
+    }
+  ]
+}

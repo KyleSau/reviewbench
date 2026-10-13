@@ -1,0 +1,16 @@
+{
+  "id": "cs-invoice-pdf-download",
+  "language": "csharp",
+  "title": "Add invoice PDF download endpoint",
+  "description": "Adds GET api/invoices/{id}/pdf so customers can download invoices from the portal.",
+  "expected_issues": [
+    {
+      "file": "src/Billing/Api/InvoicesController.cs",
+      "line_start": 40,
+      "line_end": 43,
+      "category": "missing_authorization",
+      "severity": "critical",
+      "description": "The invoice is loaded by id alone. Unlike `List`, there is no `TenantId == _currentUser.TenantId` check, so any signed-in user can download any tenant's invoice by iterating ids (IDOR). Filter by tenant and return 404 otherwise."
+    }
+  ]
+}

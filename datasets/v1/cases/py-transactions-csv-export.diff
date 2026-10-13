@@ -1,0 +1,21 @@
+diff --git a/app/reports/export.py b/app/reports/export.py
+new file mode 100644
+--- /dev/null
++++ b/app/reports/export.py
+@@ -0,0 +1,16 @@
++import csv
++
++
++def export_transactions_csv(transactions, path: str) -> int:
++    """Write transactions to `path` as CSV and return the number of rows written."""
++    f = open(path, "w", newline="", encoding="utf-8")
++    writer = csv.writer(f)
++    writer.writerow(["id", "date", "amount", "currency", "description"])
++    count = 0
++    for tx in transactions:
++        if tx.amount is None:
++            raise ValueError(f"transaction {tx.id} has no amount")
++        writer.writerow([tx.id, tx.date.isoformat(), tx.amount, tx.currency, tx.description])
++        count += 1
++    f.close()
++    return count

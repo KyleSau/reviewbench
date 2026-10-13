@@ -1,0 +1,42 @@
+diff --git a/src/Workflows/Api/WorkflowImportController.cs b/src/Workflows/Api/WorkflowImportController.cs
+new file mode 100644
+--- /dev/null
++++ b/src/Workflows/Api/WorkflowImportController.cs
+@@ -0,0 +1,37 @@
++using Acme.Workflows.Domain;
++using Acme.Workflows.Storage;
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++using Newtonsoft.Json;
++
++namespace Acme.Workflows.Api;
++
++[ApiController]
++[Authorize(Policy = "WorkflowEditor")]
++[Route("api/workflows")]
++public sealed class WorkflowImportController : ControllerBase
++{
++    private readonly IWorkflowStore _store;
++
++    public WorkflowImportController(IWorkflowStore store) => _store = store;
++
++    [HttpPost("import")]
++    public async Task<IActionResult> Import(CancellationToken ct)
++    {
++        using var reader = new StreamReader(Request.Body);
++        var json = await reader.ReadToEndAsync(ct);
++
++        var settings = new JsonSerializerSettings
++        {
++            TypeNameHandling = TypeNameHandling.All,
++        };
++        var workflow = JsonConvert.DeserializeObject<WorkflowDefinition>(json, settings);
++        if (workflow is null)
++        {
++            return BadRequest("Empty workflow payload.");
++        }
++
++        var id = await _store.SaveAsync(workflow, ct);
++        return Ok(new { id });
++    }
++}

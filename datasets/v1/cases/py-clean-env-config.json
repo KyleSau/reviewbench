@@ -1,0 +1,7 @@
+{
+  "id": "py-clean-env-config",
+  "language": "python",
+  "title": "Typed helpers for environment configuration",
+  "description": "Replaces scattered `int(os.environ[...])` calls with helpers that apply defaults and fail fast with a clear message when a variable is malformed.",
+  "expected_issues": []
+}

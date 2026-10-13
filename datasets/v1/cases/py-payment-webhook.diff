@@ -1,0 +1,28 @@
+diff --git a/app/webhooks/payments.py b/app/webhooks/payments.py
+--- a/app/webhooks/payments.py
++++ b/app/webhooks/payments.py
+@@ -2,7 +2,7 @@
+ 
+ from flask import Blueprint, request
+ 
+-from app.billing import mark_invoice_paid
++from app.billing import mark_invoice_paid, schedule_dunning_email
+ from app.config import settings
+ from app.webhooks.signing import verify_and_parse
+ 
+@@ -16,7 +16,13 @@
+     signature = request.headers.get("Payment-Signature", "")
+     event = verify_and_parse(payload, signature, settings.PAYMENT_WEBHOOK_SECRET)
+ 
+-    if event["type"] == "invoice.paid":
+-        mark_invoice_paid(event["data"]["invoice_id"])
++    # Never let a handler error escape: the provider retries every non-2xx response.
++    try:
++        if event["type"] == "invoice.paid":
++            mark_invoice_paid(event["data"]["invoice_id"])
++        elif event["type"] == "invoice.payment_failed":
++            schedule_dunning_email(event["data"]["customer_id"])
++    except Exception:
++        pass
+ 
+     return "", 200

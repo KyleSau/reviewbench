@@ -1,0 +1,43 @@
+diff --git a/src/Billing/Api/InvoicesController.cs b/src/Billing/Api/InvoicesController.cs
+--- a/src/Billing/Api/InvoicesController.cs
++++ b/src/Billing/Api/InvoicesController.cs
+@@ -1,5 +1,6 @@
+ using Acme.Billing.Data;
+ using Acme.Billing.Identity;
++using Acme.Billing.Pdf;
+ using Microsoft.AspNetCore.Authorization;
+ using Microsoft.AspNetCore.Mvc;
+ using Microsoft.EntityFrameworkCore;
+@@ -13,11 +14,13 @@
+ {
+     private readonly BillingDbContext _db;
+     private readonly ICurrentUser _currentUser;
++    private readonly IInvoicePdfRenderer _pdfRenderer;
+ 
+-    public InvoicesController(BillingDbContext db, ICurrentUser currentUser)
++    public InvoicesController(BillingDbContext db, ICurrentUser currentUser, IInvoicePdfRenderer pdfRenderer)
+     {
+         _db = db;
+         _currentUser = currentUser;
++        _pdfRenderer = pdfRenderer;
+     }
+ 
+     [HttpGet]
+@@ -30,4 +33,17 @@
+             .ToListAsync(ct);
+         return Ok(invoices);
+     }
++
++    [HttpGet("{id:int}/pdf")]
++    public async Task<IActionResult> DownloadPdf(int id, CancellationToken ct)
++    {
++        var invoice = await _db.Invoices.FindAsync(new object[] { id }, ct);
++        if (invoice is null)
++        {
++            return NotFound();
++        }
++
++        var pdf = await _pdfRenderer.RenderAsync(invoice, ct);
++        return File(pdf, "application/pdf", $"invoice-{invoice.Number}.pdf");
++    }
+ }

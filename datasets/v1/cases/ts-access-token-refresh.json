@@ -1,0 +1,16 @@
+{
+  "id": "ts-access-token-refresh",
+  "language": "typescript",
+  "title": "Refresh access tokens transparently",
+  "description": "Access tokens expire after 15 minutes and users were getting bounced to login. `getAccessToken` now refreshes when the token is close to expiry. Note: the auth server rotates refresh tokens (each one is single-use; reusing one revokes the session).",
+  "expected_issues": [
+    {
+      "file": "src/auth/token.ts",
+      "line_start": 24,
+      "line_end": 29,
+      "category": "race_condition",
+      "severity": "high",
+      "description": "Concurrent callers (a page firing several API requests at once) all see an expired token and each start their own refresh with the same single-use refresh token; the second use is treated as reuse and revokes the session, logging the user out. Share one in-flight refresh promise across callers."
+    }
+  ]
+}

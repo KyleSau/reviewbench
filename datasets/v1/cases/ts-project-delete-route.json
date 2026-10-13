@@ -1,0 +1,16 @@
+{
+  "id": "ts-project-delete-route",
+  "language": "typescript",
+  "title": "Add DELETE /projects/:id",
+  "description": "Lets users delete a project from the settings page. Projects are archived first so support can restore them for 30 days.",
+  "expected_issues": [
+    {
+      "file": "src/routes/projects.ts",
+      "line_start": 20,
+      "line_end": 21,
+      "category": "missing_authorization",
+      "severity": "critical",
+      "description": "The delete route only checks that the caller is logged in. Unlike the GET/PATCH routes it has no `requireProjectRole(...)` guard, so any authenticated user can delete any project by id. Add `requireProjectRole(\"owner\")`."
+    }
+  ]
+}

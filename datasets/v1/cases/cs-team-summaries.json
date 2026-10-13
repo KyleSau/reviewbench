@@ -1,0 +1,16 @@
+{
+  "id": "cs-team-summaries",
+  "language": "csharp",
+  "title": "Team summaries for the org dashboard",
+  "description": "The org dashboard lists every team with member and open-task counts.",
+  "expected_issues": [
+    {
+      "file": "src/Projects/TeamSummaryService.cs",
+      "line_start": 23,
+      "line_end": 26,
+      "category": "n_plus_one_query",
+      "severity": "medium",
+      "description": "Two COUNT queries run per team inside the loop (2N+1 round trips); large orgs make the dashboard slow. Project the counts in the initial query (`Select(t => new TeamSummary(..., t.Memberships.Count(), ...))`) or group-by once."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "py-ui-prefs-cookie",
+  "language": "python",
+  "title": "Persist UI preferences in a cookie",
+  "description": "Stores theme, density and table column choices client-side so we don't need a preferences table yet.",
+  "expected_issues": [
+    {
+      "file": "app/preferences.py",
+      "line_start": 13,
+      "line_end": 13,
+      "category": "insecure_deserialization",
+      "severity": "critical",
+      "description": "The cookie is fully attacker-controlled and is passed to `pickle.loads`, which can execute arbitrary code during unpickling (remote code execution). Store JSON instead, and sign the cookie if integrity matters."
+    }
+  ]
+}

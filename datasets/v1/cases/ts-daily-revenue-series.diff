@@ -1,0 +1,21 @@
+diff --git a/src/reports/series.ts b/src/reports/series.ts
+--- a/src/reports/series.ts
++++ b/src/reports/series.ts
+@@ -12,3 +12,17 @@
+   }
+   return keys;
+ }
++
++/**
++ * Gap-free daily series for the revenue chart: days without orders get an
++ * explicit zero so the x-axis stays continuous.
++ */
++export function buildDailySeries(start: Date, days: number, totals: Map<string, number>): DailyPoint[] {
++  const keys = dateKeys(start, days);
++  const series: DailyPoint[] = [];
++  for (let i = 0; i <= keys.length; i++) {
++    const key = keys[i];
++    series.push({ date: key, total: totals.get(key) ?? 0 });
++  }
++  return series;
++}

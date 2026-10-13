@@ -1,0 +1,33 @@
+diff --git a/src/routes/auth.ts b/src/routes/auth.ts
+--- a/src/routes/auth.ts
++++ b/src/routes/auth.ts
+@@ -8,6 +8,12 @@
+ const LoginBody = z.object({
+   email: z.string().email(),
+   password: z.string().min(1),
++});
++
++const SignupBody = z.object({
++  email: z.string().trim().toLowerCase().email().max(254),
++  password: z.string().min(12).max(128),
++  displayName: z.string().trim().min(1).max(50),
+ });
+ 
+ router.post("/login", rateLimit({ windowMs: 60_000, max: 10 }), async (req, res, next) => {
+@@ -22,3 +28,16 @@
+     next(err);
+   }
+ });
++
++router.post("/signup", rateLimit({ windowMs: 60_000, max: 5 }), async (req, res, next) => {
++  const parsed = SignupBody.safeParse(req.body);
++  if (!parsed.success) {
++    return res.status(400).json({ error: "invalid_body", issues: parsed.error.issues });
++  }
++  try {
++    const user = await users.register(parsed.data);
++    res.status(201).json({ id: user.id });
++  } catch (err) {
++    next(err);
++  }
++});

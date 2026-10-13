@@ -1,0 +1,28 @@
+diff --git a/app/preferences.py b/app/preferences.py
+new file mode 100644
+--- /dev/null
++++ b/app/preferences.py
+@@ -0,0 +1,23 @@
++import base64
++import pickle
++
++PREFS_COOKIE = "ui_prefs"
++DEFAULT_PREFS = {"theme": "light", "density": "comfortable", "columns": ["name", "status"]}
++
++
++def load_preferences(request) -> dict:
++    raw = request.cookies.get(PREFS_COOKIE)
++    if not raw:
++        return dict(DEFAULT_PREFS)
++    try:
++        prefs = pickle.loads(base64.urlsafe_b64decode(raw))
++    except (ValueError, pickle.UnpicklingError):
++        return dict(DEFAULT_PREFS)
++    return {**DEFAULT_PREFS, **prefs}
++
++
++def save_preferences(response, prefs: dict) -> None:
++    encoded = base64.urlsafe_b64encode(pickle.dumps(prefs)).decode("ascii")
++    response.set_cookie(
++        PREFS_COOKIE, encoded, max_age=60 * 60 * 24 * 365, httponly=True, secure=True, samesite="Lax"
++    )

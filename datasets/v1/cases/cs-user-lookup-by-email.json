@@ -1,0 +1,24 @@
+{
+  "id": "cs-user-lookup-by-email",
+  "language": "csharp",
+  "title": "Look up users by email for the support tool",
+  "description": "Support agents paste the email a customer wrote in from; this adds a lightweight Dapper repository so the support tool does not need the full EF model.",
+  "expected_issues": [
+    {
+      "file": "src/Accounts/UserLookupRepository.cs",
+      "line_start": 23,
+      "line_end": 23,
+      "category": "sql_injection",
+      "severity": "critical",
+      "description": "The email is spliced into the SQL with string interpolation, so input like `x' OR '1'='1` changes the query. Use a Dapper parameter: `WHERE Email = @email` with `new { email }`."
+    },
+    {
+      "file": "src/Accounts/UserLookupRepository.cs",
+      "line_start": 21,
+      "line_end": 22,
+      "category": "resource_leak",
+      "severity": "medium",
+      "description": "The SqlConnection is never disposed, so every lookup holds a pooled connection until finalization and the pool is exhausted under load. Use `await using var connection = new SqlConnection(...)`."
+    }
+  ]
+}

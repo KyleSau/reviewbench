@@ -1,0 +1,16 @@
+{
+  "id": "cs-shipping-label-create",
+  "language": "csharp",
+  "title": "Create shipping labels from the order page",
+  "description": "Adds CreateLabelAsync, which buys a carrier label and stores the tracking number on the order.",
+  "expected_issues": [
+    {
+      "file": "src/Fulfillment/ShippingLabelService.cs",
+      "line_start": 22,
+      "line_end": 24,
+      "category": "null_handling",
+      "severity": "medium",
+      "description": "`FirstOrDefaultAsync` returns null for an unknown order id, and `order.ShippingAddress` is dereferenced without a check, producing a NullReferenceException (500) instead of the `OrderNotFoundException` that `VoidLabelAsync` throws."
+    }
+  ]
+}

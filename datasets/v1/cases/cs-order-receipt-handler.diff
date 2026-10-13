@@ -1,0 +1,37 @@
+diff --git a/src/Orders/Handlers/OrderPlacedHandler.cs b/src/Orders/Handlers/OrderPlacedHandler.cs
+new file mode 100644
+--- /dev/null
++++ b/src/Orders/Handlers/OrderPlacedHandler.cs
+@@ -0,0 +1,32 @@
++using Acme.Messaging;
++using Acme.Orders.Events;
++using Acme.Orders.Receipts;
++using Microsoft.Extensions.Logging;
++
++namespace Acme.Orders.Handlers;
++
++public sealed class OrderPlacedHandler
++{
++    private readonly IReceiptRenderer _receipts;
++    private readonly IEmailSender _email;
++    private readonly ILogger<OrderPlacedHandler> _logger;
++
++    public OrderPlacedHandler(
++        IMessageBus bus,
++        IReceiptRenderer receipts,
++        IEmailSender email,
++        ILogger<OrderPlacedHandler> logger)
++    {
++        _receipts = receipts;
++        _email = email;
++        _logger = logger;
++        bus.Subscribe<OrderPlaced>(OnOrderPlaced);
++    }
++
++    private async void OnOrderPlaced(OrderPlaced message)
++    {
++        var receipt = await _receipts.RenderAsync(message.OrderId);
++        await _email.SendAsync(message.CustomerEmail, "Your Acme receipt", receipt);
++        _logger.LogInformation("Receipt emailed for order {OrderId}", message.OrderId);
++    }
++}

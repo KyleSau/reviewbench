@@ -1,0 +1,40 @@
+diff --git a/src/Catalog/PriceLookup.cs b/src/Catalog/PriceLookup.cs
+new file mode 100644
+--- /dev/null
++++ b/src/Catalog/PriceLookup.cs
+@@ -0,0 +1,35 @@
++using Acme.Catalog.Data;
++using Microsoft.EntityFrameworkCore;
++
++namespace Acme.Catalog;
++
++public sealed class PriceLookup
++{
++    // Large carts are looked up in fixed-size chunks so each query's IN list stays bounded.
++    private const int MaxSkusPerQuery = 500;
++
++    private readonly CatalogDbContext _db;
++
++    public PriceLookup(CatalogDbContext db) => _db = db;
++
++    public async Task<IReadOnlyDictionary<string, decimal>> GetPricesAsync(
++        IReadOnlyCollection<string> skus, CancellationToken ct)
++    {
++        var prices = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
++        foreach (var chunk in skus.Distinct(StringComparer.OrdinalIgnoreCase).Chunk(MaxSkusPerQuery))
++        {
++            var rows = await _db.Prices
++                .AsNoTracking()
++                .Where(p => chunk.Contains(p.Sku))
++                .Select(p => new { p.Sku, p.Amount })
++                .ToListAsync(ct);
++
++            foreach (var row in rows)
++            {
++                prices[row.Sku] = row.Amount;
++            }
++        }
++
++        return prices;
++    }
++}

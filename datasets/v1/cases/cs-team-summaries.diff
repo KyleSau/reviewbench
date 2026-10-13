@@ -1,0 +1,37 @@
+diff --git a/src/Projects/TeamSummaryService.cs b/src/Projects/TeamSummaryService.cs
+new file mode 100644
+--- /dev/null
++++ b/src/Projects/TeamSummaryService.cs
+@@ -0,0 +1,32 @@
++using Acme.Projects.Data;
++using Microsoft.EntityFrameworkCore;
++
++namespace Acme.Projects;
++
++public sealed record TeamSummary(Guid TeamId, string Name, int MemberCount, int OpenTaskCount);
++
++public sealed class TeamSummaryService
++{
++    private readonly ProjectsDbContext _db;
++
++    public TeamSummaryService(ProjectsDbContext db) => _db = db;
++
++    public async Task<IReadOnlyList<TeamSummary>> GetTeamSummariesAsync(Guid organizationId, CancellationToken ct)
++    {
++        var teams = await _db.Teams
++            .AsNoTracking()
++            .Where(t => t.OrganizationId == organizationId)
++            .OrderBy(t => t.Name)
++            .ToListAsync(ct);
++
++        var summaries = new List<TeamSummary>(teams.Count);
++        foreach (var team in teams)
++        {
++            var memberCount = await _db.Memberships.CountAsync(m => m.TeamId == team.Id, ct);
++            var openTaskCount = await _db.Tasks.CountAsync(t => t.TeamId == team.Id && !t.IsDone, ct);
++            summaries.Add(new TeamSummary(team.Id, team.Name, memberCount, openTaskCount));
++        }
++
++        return summaries;
++    }
++}

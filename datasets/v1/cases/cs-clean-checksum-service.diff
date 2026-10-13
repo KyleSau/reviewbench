@@ -1,0 +1,44 @@
+diff --git a/src/Storage/ChecksumService.cs b/src/Storage/ChecksumService.cs
+new file mode 100644
+--- /dev/null
++++ b/src/Storage/ChecksumService.cs
+@@ -0,0 +1,39 @@
++using System.Security.Cryptography;
++
++namespace Acme.Storage;
++
++public sealed class ChecksumService
++{
++    /// <summary>Computes the SHA-256 of a file without loading it into memory.</summary>
++    public async Task<string> ComputeSha256Async(string path, CancellationToken ct)
++    {
++        await using var stream = new FileStream(
++            path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 81920, useAsync: true);
++        var hash = await SHA256.HashDataAsync(stream, ct);
++        return Convert.ToHexString(hash);
++    }
++
++    /// <summary>Reads "sha256  relative/path" lines, skipping blank lines and # comments.</summary>
++    public async Task<IReadOnlyDictionary<string, string>> ReadManifestAsync(string manifestPath, CancellationToken ct)
++    {
++        var entries = new Dictionary<string, string>(StringComparer.Ordinal);
++        using var reader = new StreamReader(manifestPath);
++        while (await reader.ReadLineAsync(ct) is { } line)
++        {
++            if (line.Length == 0 || line.StartsWith('#'))
++            {
++                continue;
++            }
++
++            var parts = line.Split("  ", 2);
++            if (parts.Length != 2)
++            {
++                throw new FormatException($"Malformed manifest line: '{line}'");
++            }
++
++            entries[parts[1]] = parts[0];
++        }
++
++        return entries;
++    }
++}

@@ -1,0 +1,16 @@
+{
+  "id": "py-transactions-csv-export",
+  "language": "python",
+  "title": "Add CSV export for transactions",
+  "description": "Finance wants a nightly CSV of settled transactions dropped on the shared volume.",
+  "expected_issues": [
+    {
+      "file": "app/reports/export.py",
+      "line_start": 6,
+      "line_end": 15,
+      "category": "resource_leak",
+      "severity": "medium",
+      "description": "The file is opened without a `with` block, so the `ValueError` path (or any exception from the iterator or writer) skips `f.close()`, leaking the handle and leaving a truncated, unflushed CSV on the shared volume. Use `with open(...) as f:`."
+    }
+  ]
+}

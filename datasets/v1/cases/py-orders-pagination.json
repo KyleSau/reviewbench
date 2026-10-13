@@ -1,0 +1,16 @@
+{
+  "id": "py-orders-pagination",
+  "language": "python",
+  "title": "Paginate the orders list endpoint",
+  "description": "Customers with years of history were getting multi-MB responses from GET /api/orders. This adds `page` (1-based) and `page_size` query params and returns a paging envelope.",
+  "expected_issues": [
+    {
+      "file": "app/api/orders.py",
+      "line_start": 33,
+      "line_end": 33,
+      "category": "off_by_one",
+      "severity": "medium",
+      "description": "`page` is documented and clamped as 1-based, but the offset is `page * page_size`, so page 1 skips the first `page_size` orders and the newest orders are never returned. Should be `(page - 1) * page_size`."
+    }
+  ]
+}

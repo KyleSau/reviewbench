@@ -1,0 +1,30 @@
+diff --git a/src/Fulfillment/ShippingLabelService.cs b/src/Fulfillment/ShippingLabelService.cs
+--- a/src/Fulfillment/ShippingLabelService.cs
++++ b/src/Fulfillment/ShippingLabelService.cs
+@@ -15,6 +15,26 @@
+         _carrier = carrier;
+     }
+ 
++    public async Task<ShippingLabel> CreateLabelAsync(int orderId, CancellationToken ct)
++    {
++        var order = await _db.Orders
++            .Include(o => o.ShippingAddress)
++            .FirstOrDefaultAsync(o => o.Id == orderId, ct);
++
++        var address = order.ShippingAddress;
++        var request = new LabelRequest(
++            Recipient: order.CustomerName,
++            Line1: address.Line1,
++            City: address.City,
++            PostalCode: address.PostalCode,
++            CountryCode: address.CountryCode);
++
++        var label = await _carrier.CreateLabelAsync(request, ct);
++        order.TrackingNumber = label.TrackingNumber;
++        await _db.SaveChangesAsync(ct);
++        return label;
++    }
++
+     public async Task VoidLabelAsync(int orderId, CancellationToken ct)
+     {
+         var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == orderId, ct)

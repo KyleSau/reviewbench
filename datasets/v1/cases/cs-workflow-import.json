@@ -1,0 +1,16 @@
+{
+  "id": "cs-workflow-import",
+  "language": "csharp",
+  "title": "Import workflows from JSON",
+  "description": "Lets editors import a workflow file produced by the export endpoint. Steps are polymorphic (EmailStep, WebhookStep, DelayStep), so the payload carries `$type` metadata and Json.NET restores the concrete types.",
+  "expected_issues": [
+    {
+      "file": "src/Workflows/Api/WorkflowImportController.cs",
+      "line_start": 26,
+      "line_end": 28,
+      "category": "insecure_deserialization",
+      "severity": "critical",
+      "description": "`TypeNameHandling.All` on a request body lets the caller choose which .NET types get instantiated, a known remote-code-execution vector via gadget types. Restrict types with a `SerializationBinder` allow-list of step types, or use an explicit discriminator."
+    }
+  ]
+}

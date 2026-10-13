@@ -1,0 +1,34 @@
+diff --git a/src/auth/token.ts b/src/auth/token.ts
+--- a/src/auth/token.ts
++++ b/src/auth/token.ts
+@@ -1,4 +1,8 @@
++import { authClient } from "./authClient";
++import { SessionExpiredError } from "./errors";
+ import { storage } from "../lib/storage";
++
++const EXPIRY_SKEW_MS = 30_000;
+ 
+ let accessToken: string | null = null;
+ let expiresAt = 0;
+@@ -9,6 +13,19 @@
+   storage.set("refresh_token", refreshToken);
+ }
+ 
+-export function getAccessToken(): string | null {
+-  return Date.now() < expiresAt ? accessToken : null;
++/**
++ * Returns a valid access token, refreshing it first if it is about to expire.
++ * The API client calls this before every request.
++ */
++export async function getAccessToken(): Promise<string> {
++  if (accessToken && Date.now() < expiresAt - EXPIRY_SKEW_MS) {
++    return accessToken;
++  }
++  const refreshToken = storage.get("refresh_token");
++  if (!refreshToken) {
++    throw new SessionExpiredError();
++  }
++  const res = await authClient.refresh(refreshToken);
++  setSession(res.accessToken, res.refreshToken, res.expiresIn);
++  return res.accessToken;
+ }

@@ -1,0 +1,31 @@
+diff --git a/src/Accounts/UserLookupRepository.cs b/src/Accounts/UserLookupRepository.cs
+new file mode 100644
+--- /dev/null
++++ b/src/Accounts/UserLookupRepository.cs
+@@ -0,0 +1,26 @@
++using Dapper;
++using Microsoft.Data.SqlClient;
++using Microsoft.Extensions.Configuration;
++
++namespace Acme.Accounts;
++
++public sealed record UserSummary(int Id, string Email, string DisplayName);
++
++public sealed class UserLookupRepository
++{
++    private readonly string _connectionString;
++
++    public UserLookupRepository(IConfiguration configuration)
++    {
++        _connectionString = configuration.GetConnectionString("Accounts")
++            ?? throw new InvalidOperationException("Missing connection string 'Accounts'.");
++    }
++
++    public async Task<UserSummary?> FindByEmailAsync(string email)
++    {
++        var connection = new SqlConnection(_connectionString);
++        await connection.OpenAsync();
++        var sql = $"SELECT Id, Email, DisplayName FROM Users WHERE Email = '{email}'";
++        return await connection.QuerySingleOrDefaultAsync<UserSummary>(sql);
++    }
++}

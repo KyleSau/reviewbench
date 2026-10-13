@@ -1,0 +1,16 @@
+{
+  "id": "py-payment-webhook",
+  "language": "python",
+  "title": "Handle payment_failed webhook events",
+  "description": "Adds dunning emails for `invoice.payment_failed`. Also hardens the webhook: the provider retries on any non-2xx response, and a retry storm took the billing worker down last week.",
+  "expected_issues": [
+    {
+      "file": "app/webhooks/payments.py",
+      "line_start": 20,
+      "line_end": 26,
+      "category": "swallowed_exception",
+      "severity": "high",
+      "description": "Every handler failure is silently discarded and the endpoint still returns 200, so the provider never retries and nothing is logged: a failed `mark_invoice_paid` leaves a paid invoice marked unpaid with no trace. At minimum log the exception; better, return 5xx for transient failures and dedupe retries."
+    }
+  ]
+}

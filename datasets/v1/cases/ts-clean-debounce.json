@@ -1,0 +1,7 @@
+{
+  "id": "ts-clean-debounce",
+  "language": "typescript",
+  "title": "Add a typed debounce utility",
+  "description": "Replaces the lodash import in the search box with a tiny typed debounce (with tests).",
+  "expected_issues": []
+}

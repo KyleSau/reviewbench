@@ -1,0 +1,53 @@
+diff --git a/app/config/env.py b/app/config/env.py
+new file mode 100644
+--- /dev/null
++++ b/app/config/env.py
+@@ -0,0 +1,48 @@
++"""Typed helpers for reading configuration from environment variables."""
++
++from __future__ import annotations
++
++import os
++
++_TRUE = frozenset({"1", "true", "yes", "on"})
++_FALSE = frozenset({"0", "false", "no", "off"})
++
++
++class ConfigError(ValueError):
++    """Raised when an environment variable is missing or malformed."""
++
++
++def env_str(name: str, default: str | None = None, *, required: bool = False) -> str | None:
++    value = os.environ.get(name)
++    if value is None or value.strip() == "":
++        if required:
++            raise ConfigError(f"{name} is required but not set")
++        return default
++    return value.strip()
++
++
++def env_int(name: str, default: int, *, minimum: int | None = None, maximum: int | None = None) -> int:
++    raw = env_str(name)
++    if raw is None:
++        return default
++    try:
++        value = int(raw)
++    except ValueError as exc:
++        raise ConfigError(f"{name} must be an integer, got {raw!r}") from exc
++    if minimum is not None and value < minimum:
++        raise ConfigError(f"{name} must be >= {minimum}, got {value}")
++    if maximum is not None and value > maximum:
++        raise ConfigError(f"{name} must be <= {maximum}, got {value}")
++    return value
++
++
++def env_bool(name: str, default: bool) -> bool:
++    raw = env_str(name)
++    if raw is None:
++        return default
++    normalized = raw.lower()
++    if normalized in _TRUE:
++        return True
++    if normalized in _FALSE:
++        return False
++    raise ConfigError(f"{name} must be one of {sorted(_TRUE | _FALSE)}, got {raw!r}")

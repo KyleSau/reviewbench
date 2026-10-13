@@ -1,0 +1,16 @@
+{
+  "id": "ts-fetch-invoices",
+  "language": "typescript",
+  "title": "Add fetchInvoices to the billing API client",
+  "description": "The new invoices tab needs the customer's invoices; follows the existing client helpers.",
+  "expected_issues": [
+    {
+      "file": "src/api/billing.ts",
+      "line_start": 20,
+      "line_end": 21,
+      "category": "error_handling",
+      "severity": "medium",
+      "description": "`fetch` does not reject on HTTP errors and `res.ok` is never checked, so a 401/404/500 error body is parsed as data and `body.invoices.map` throws a confusing TypeError (or `res.json()` throws on an HTML error page). Check `res.ok` and throw `ApiError` like `fetchCustomer`."
+    }
+  ]
+}

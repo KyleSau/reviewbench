@@ -1,0 +1,78 @@
+diff --git a/app/utils/retry.py b/app/utils/retry.py
+new file mode 100644
+--- /dev/null
++++ b/app/utils/retry.py
+@@ -0,0 +1,37 @@
++import functools
++import random
++import time
++from collections.abc import Callable
++
++
++def retry(
++    *,
++    attempts: int = 3,
++    base_delay: float = 0.2,
++    max_delay: float = 5.0,
++    retry_on: tuple[type[BaseException], ...] = (ConnectionError, TimeoutError),
++    sleep: Callable[[float], None] = time.sleep,
++):
++    """Retry the wrapped function with exponential backoff and full jitter.
++
++    Only exceptions in ``retry_on`` are retried; anything else propagates immediately.
++    After the last attempt the original exception is re-raised unchanged.
++    """
++    if attempts < 1:
++        raise ValueError("attempts must be >= 1")
++
++    def decorator(fn):
++        @functools.wraps(fn)
++        def wrapper(*args, **kwargs):
++            for attempt in range(1, attempts + 1):
++                try:
++                    return fn(*args, **kwargs)
++                except retry_on:
++                    if attempt == attempts:
++                        raise
++                    delay = min(max_delay, base_delay * 2 ** (attempt - 1))
++                    sleep(random.uniform(0, delay))
++
++        return wrapper
++
++    return decorator
+diff --git a/tests/utils/test_retry.py b/tests/utils/test_retry.py
+new file mode 100644
+--- /dev/null
++++ b/tests/utils/test_retry.py
+@@ -0,0 +1,31 @@
++import pytest
++
++from app.utils.retry import retry
++
++
++def test_retries_until_success():
++    calls, sleeps = [], []
++
++    @retry(attempts=3, sleep=sleeps.append)
++    def flaky():
++        calls.append(1)
++        if len(calls) < 3:
++            raise ConnectionError("boom")
++        return "ok"
++
++    assert flaky() == "ok"
++    assert len(calls) == 3
++    assert len(sleeps) == 2
++
++
++def test_non_retryable_error_propagates_immediately():
++    calls = []
++
++    @retry(attempts=5, sleep=lambda _: None)
++    def broken():
++        calls.append(1)
++        raise KeyError("missing")
++
++    with pytest.raises(KeyError):
++        broken()
++    assert len(calls) == 1

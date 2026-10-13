@@ -1,0 +1,16 @@
+{
+  "id": "py-admin-user-search",
+  "language": "python",
+  "title": "Add user search for the admin console",
+  "description": "Support asked for a search box in the admin console. Adds `search_users`, a case-insensitive match on username or email.",
+  "expected_issues": [
+    {
+      "file": "app/repositories/users.py",
+      "line_start": 16,
+      "line_end": 19,
+      "category": "sql_injection",
+      "severity": "critical",
+      "description": "The search term is interpolated into the SQL text with an f-string, so a term like `' OR 1=1 --` rewrites the query. Use a bound parameter (`ILIKE %s` with `f\"%{term}%\"` passed as a parameter) like `get_user_by_id` does."
+    }
+  ]
+}

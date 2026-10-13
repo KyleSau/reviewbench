@@ -1,0 +1,22 @@
+diff --git a/inventory/services.py b/inventory/services.py
+--- a/inventory/services.py
++++ b/inventory/services.py
+@@ -2,6 +2,18 @@
+ 
+ from inventory.exceptions import OutOfStock
+ from inventory.models import InventoryItem, Reservation
++
++
++@transaction.atomic
++def reserve_stock(sku: str, quantity: int) -> Reservation:
++    if quantity <= 0:
++        raise ValueError("quantity must be positive")
++    item = InventoryItem.objects.get(sku=sku)
++    if item.available < quantity:
++        raise OutOfStock(sku, requested=quantity, available=item.available)
++    item.available -= quantity
++    item.save(update_fields=["available"])
++    return Reservation.objects.create(item=item, quantity=quantity)
+ 
+ 
+ @transaction.atomic

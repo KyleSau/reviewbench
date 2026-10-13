@@ -1,0 +1,16 @@
+{
+  "id": "ts-daily-revenue-series",
+  "language": "typescript",
+  "title": "Zero-fill missing days in the revenue chart",
+  "description": "The revenue chart drew misleading straight lines across days with no orders. `buildDailySeries` now emits an explicit zero for every day in the range.",
+  "expected_issues": [
+    {
+      "file": "src/reports/series.ts",
+      "line_start": 23,
+      "line_end": 25,
+      "category": "off_by_one",
+      "severity": "medium",
+      "description": "The loop runs while `i <= keys.length`, one past the end of the array, so the series gets an extra point with `date: undefined` and total 0. Use `i < keys.length` (or `keys.map`)."
+    }
+  ]
+}

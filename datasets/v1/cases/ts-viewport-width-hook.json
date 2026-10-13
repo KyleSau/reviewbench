@@ -1,0 +1,16 @@
+{
+  "id": "ts-viewport-width-hook",
+  "language": "typescript",
+  "title": "Add useViewportWidth hook",
+  "description": "Small hook so the data table can switch to a card layout on narrow screens.",
+  "expected_issues": [
+    {
+      "file": "src/hooks/useViewportWidth.ts",
+      "line_start": 7,
+      "line_end": 10,
+      "category": "resource_leak",
+      "severity": "medium",
+      "description": "The effect registers a `resize` listener but returns no cleanup, so every mount leaks a listener that keeps calling `setWidth` on unmounted components. Return `() => window.removeEventListener(\"resize\", onResize)`."
+    }
+  ]
+}

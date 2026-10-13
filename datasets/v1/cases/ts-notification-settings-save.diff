@@ -1,0 +1,16 @@
+diff --git a/src/settings/NotificationSettingsForm.tsx b/src/settings/NotificationSettingsForm.tsx
+--- a/src/settings/NotificationSettingsForm.tsx
++++ b/src/settings/NotificationSettingsForm.tsx
+@@ -14,7 +14,11 @@
+ 
+   async function handleSave() {
+     setSaving(true);
+-    await api.put(`/users/${userId}/notification-settings`, settings);
++    try {
++      await api.put(`/users/${userId}/notification-settings`, settings);
++    } catch {
++      // The api client already reports request failures to Sentry.
++    }
+     setSaving(false);
+     toast.success("Settings saved");
+   }

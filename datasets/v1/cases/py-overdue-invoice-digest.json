@@ -1,0 +1,24 @@
+{
+  "id": "py-overdue-invoice-digest",
+  "language": "python",
+  "title": "Nightly overdue-invoice digest grouped by billing contact",
+  "description": "Adds an optional `billing_contact` on Customer (with migration) and a job that groups open, overdue invoices by that contact's email for the nightly digest.",
+  "expected_issues": [
+    {
+      "file": "billing/digest.py",
+      "line_start": 8,
+      "line_end": 11,
+      "category": "n_plus_one_query",
+      "severity": "medium",
+      "description": "Each loop iteration lazily loads `invoice.customer` and then `customer.billing_contact`, i.e. two extra queries per overdue invoice. Use `select_related(\"customer__billing_contact\")` on the queryset."
+    },
+    {
+      "file": "billing/digest.py",
+      "line_start": 11,
+      "line_end": 11,
+      "category": "null_handling",
+      "severity": "high",
+      "description": "`billing_contact` is added in this PR as nullable and every existing customer starts with NULL, so `billing_contact.email` raises AttributeError on `None` and the nightly job crashes on the first such invoice. Skip or fall back when it is None."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+diff --git a/src/routes/projects.ts b/src/routes/projects.ts
+--- a/src/routes/projects.ts
++++ b/src/routes/projects.ts
+@@ -16,3 +16,8 @@
+   const updated = await projects.update(req.params.id, req.body);
+   res.json(updated);
+ });
++
++router.delete("/projects/:id", requireAuth, async (req, res) => {
++  await projects.archiveAndDelete(req.params.id, { deletedBy: req.user.id });
++  res.status(204).end();
++});

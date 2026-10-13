@@ -1,0 +1,16 @@
+{
+  "id": "py-inventory-reserve",
+  "language": "python",
+  "title": "Reserve stock at checkout",
+  "description": "Checkout now reserves stock before payment so we stop overselling flash-sale items. Wrapped in a transaction so the reservation and the stock decrement commit together.",
+  "expected_issues": [
+    {
+      "file": "inventory/services.py",
+      "line_start": 11,
+      "line_end": 15,
+      "category": "race_condition",
+      "severity": "high",
+      "description": "Check-then-act without a row lock: `transaction.atomic` does not lock the row, so two concurrent checkouts can both read the same `available`, both pass the check, and the second save overwrites the first (overselling). Use `select_for_update()` as `release_reservation` does, or a conditional `F()` update."
+    }
+  ]
+}

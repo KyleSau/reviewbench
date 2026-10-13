@@ -1,0 +1,16 @@
+{
+  "id": "cs-order-receipt-handler",
+  "language": "csharp",
+  "title": "Email receipts when an order is placed",
+  "description": "Subscribes a handler to OrderPlaced on the in-process message bus to email the receipt.",
+  "expected_issues": [
+    {
+      "file": "src/Orders/Handlers/OrderPlacedHandler.cs",
+      "line_start": 26,
+      "line_end": 29,
+      "category": "error_handling",
+      "severity": "high",
+      "description": "`async void` means the bus cannot await the handler or observe its failure: an exception from rendering or SMTP is rethrown on the thread pool and crashes the process, and the message is never retried. Return `Task` (subscribe with a `Func<T, Task>`) and handle or log failures."
+    }
+  ]
+}

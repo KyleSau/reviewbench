@@ -1,0 +1,49 @@
+diff --git a/app/api/orders.py b/app/api/orders.py
+--- a/app/api/orders.py
++++ b/app/api/orders.py
+@@ -1,4 +1,4 @@
+-from flask import Blueprint, jsonify
++from flask import Blueprint, jsonify, request
+ 
+ from app.auth import current_user, login_required
+ from app.db import get_session
+@@ -6,15 +6,36 @@
+ 
+ bp = Blueprint("orders", __name__, url_prefix="/api/orders")
+ 
++DEFAULT_PAGE_SIZE = 20
++MAX_PAGE_SIZE = 100
++
+ 
+ @bp.get("/")
+ @login_required
+ def list_orders():
++    """List the current user's orders, newest first.
++
++    Query params:
++        page: 1-based page number (default 1)
++        page_size: items per page (default 20, max 100)
++    """
++    page = max(request.args.get("page", 1, type=int), 1)
++    page_size = request.args.get("page_size", DEFAULT_PAGE_SIZE, type=int)
++    page_size = min(max(page_size, 1), MAX_PAGE_SIZE)
++
+     session = get_session()
+-    orders = (
++    query = (
+         session.query(Order)
+         .filter(Order.customer_id == current_user().id)
+         .order_by(Order.created_at.desc())
+-        .all()
+     )
+-    return jsonify([o.to_dict() for o in orders])
++    total = query.count()
++    orders = query.offset(page * page_size).limit(page_size).all()
++    return jsonify(
++        {
++            "items": [o.to_dict() for o in orders],
++            "page": page,
++            "page_size": page_size,
++            "total": total,
++        }
++    )

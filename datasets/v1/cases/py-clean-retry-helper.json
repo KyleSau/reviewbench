@@ -1,0 +1,7 @@
+{
+  "id": "py-clean-retry-helper",
+  "language": "python",
+  "title": "Add a small retry-with-backoff decorator",
+  "description": "Several integrations hand-roll retry loops. This adds one decorator with exponential backoff and full jitter, retrying only the exception types you list.",
+  "expected_issues": []
+}

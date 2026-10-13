@@ -1,0 +1,7 @@
+{
+  "id": "cs-clean-price-batching",
+  "language": "csharp",
+  "title": "Batch price lookups for large carts",
+  "description": "Cart pricing used to issue one query per SKU. This loads prices with a bounded IN list per chunk of SKUs instead.",
+  "expected_issues": []
+}
