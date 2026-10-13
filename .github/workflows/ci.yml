@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-gate:
+    name: Lint, test, heuristic eval + gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Unit tests (offline; the Claude client is mocked)
+        run: pytest
+
+      - name: Run the heuristic reviewer
+        run: reviewbench run --reviewer heuristic --out runs/heuristic-ci.json
+
+      - name: Report (also shown on the run's summary page)
+        run: |
+          reviewbench report baselines/heuristic.json runs/heuristic-ci.json --out runs/report.md
+          cat runs/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Gate against the committed baseline
+        run: >
+          reviewbench gate
+          --baseline baselines/heuristic.json
+          --candidate runs/heuristic-ci.json
+          --max-recall-drop 0.05
+          --max-precision-drop 0.05
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: heuristic-run
+          path: runs/
+
+  claude-eval:
+    # Costs real money, so it only runs on main or when started by hand, and only when
+    # an ANTHROPIC_API_KEY repository secret exists. Pull requests from forks never see
+    # secrets, so this job is a no-op for them.
+    name: Claude reviewer eval (optional)
+    needs: test-and-gate
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - name: Skip when no API key is configured
+        if: env.ANTHROPIC_API_KEY == ''
+        run: echo "::notice::ANTHROPIC_API_KEY secret is not set; skipping the Claude eval."
+
+      - uses: actions/checkout@v4
+        if: env.ANTHROPIC_API_KEY != ''
+
+      - uses: actions/setup-python@v5
+        if: env.ANTHROPIC_API_KEY != ''
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        if: env.ANTHROPIC_API_KEY != ''
+        run: python -m pip install -e .
+
+      - name: Run the Claude reviewer with the LLM judge
+        if: env.ANTHROPIC_API_KEY != ''
+        run: reviewbench run --reviewer claude --judge claude --out runs/claude-ci.json
+
+      - name: Report vs the heuristic baseline
+        if: env.ANTHROPIC_API_KEY != ''
+        run: |
+          reviewbench report baselines/heuristic.json runs/claude-ci.json --out runs/claude-report.md
+          cat runs/claude-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Gate (Claude must not be worse than the heuristic floor)
+        if: env.ANTHROPIC_API_KEY != ''
+        run: >
+          reviewbench gate
+          --baseline baselines/heuristic.json
+          --candidate runs/claude-ci.json
+          --max-recall-drop 0.05
+          --max-precision-drop 0.05
+
+      - uses: actions/upload-artifact@v4
+        if: always() && env.ANTHROPIC_API_KEY != ''
+        with:
+          name: claude-run
+          path: runs/
