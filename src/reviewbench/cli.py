@@ -121,7 +121,7 @@ def cmd_report(args: argparse.Namespace) -> int:
     text = render_report(runs)
     if args.out:
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-        Path(args.out).write_text(text, encoding="utf-8")
+        Path(args.out).write_text(text, encoding="utf-8", newline="\n")
         print(f"wrote {args.out}")
     else:
         print(text)

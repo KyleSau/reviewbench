@@ -125,7 +125,8 @@ def run_benchmark(
 def save_run(run: RunResult, path: str | Path) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(run.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    # LF on every OS, so a baseline regenerated on Windows diffs cleanly against Linux CI.
+    target.write_text(run.model_dump_json(indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def load_run(path: str | Path) -> RunResult:
